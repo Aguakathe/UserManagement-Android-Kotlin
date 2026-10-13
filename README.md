@@ -83,5 +83,7 @@ PENDIENTE
 ### 11. Servicios modificados en Swagger
 ![Swagger](evidencias/11_swagger.png)
 
+![Swagger](evidencias/11_swagger-1.png)
+
 ### 12. Código fuente
 Entregado mediante: _GitHub / ZIP / plataforma indicada por el docente_ (enlace).
