@@ -10,6 +10,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.parcialkotlinapp.api.ApiClient
+import com.example.parcialkotlinapp.api.ApiErrorParser
 import com.example.parcialkotlinapp.models.CrearUsuarioRequest
 import com.example.parcialkotlinapp.models.Usuario
 import com.example.parcialkotlinapp.utils.FechaUtils
@@ -247,8 +248,21 @@ class RegistroActivity : AppCompatActivity() {
 
                     } else {
 
-                        tvMensaje.text =
-                            "Error del servidor: ${response.code()}"
+                        // Mensaje real enviado por la API
+                        // (ej: "Ya existe un usuario con ese correo.")
+                        val mensaje =
+                            ApiErrorParser.obtenerMensaje(response)
+
+                        tvMensaje.text = mensaje
+
+                        // Si el problema es el correo, se marca el campo
+                        if (response.code() == 400 &&
+                            mensaje.contains("correo", ignoreCase = true)
+                        ) {
+
+                            etCorreo.error = mensaje
+                            etCorreo.requestFocus()
+                        }
                     }
                 }
 
@@ -260,7 +274,7 @@ class RegistroActivity : AppCompatActivity() {
                     btnRegistrar.isEnabled = true
 
                     tvMensaje.text =
-                        "Error de conexión: ${t.message}"
+                        "No se pudo conectar con el servidor. Verifique que la API esté en ejecución."
                 }
             })
     }
