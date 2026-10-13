@@ -14,6 +14,7 @@ import com.example.parcialkotlinapp.models.CrearUsuarioRequest
 import com.example.parcialkotlinapp.models.Usuario
 import com.example.parcialkotlinapp.utils.FechaUtils
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -239,16 +240,10 @@ class RegistroActivity : AppCompatActivity() {
 
                     if (response.isSuccessful) {
 
-                        val usuarioCreado = response.body()
+                        tvMensaje.text = ""
 
-                        tvMensaje.text =
-                            "Usuario registrado correctamente"
-
-                        Toast.makeText(
-                            this@RegistroActivity,
-                            "Usuario creado. ID: ${usuarioCreado?.id}",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        // La API confirmó la creación (HTTP 201)
+                        mostrarDialogoRegistroExitoso()
 
                     } else {
 
@@ -268,6 +263,28 @@ class RegistroActivity : AppCompatActivity() {
                         "Error de conexión: ${t.message}"
                 }
             })
+    }
+
+    // =====================================
+    // ALERTDIALOG: REGISTRO EXITOSO
+    // Al presionar ACEPTAR se regresa al Login
+    // =====================================
+    private fun mostrarDialogoRegistroExitoso() {
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Registro exitoso")
+            .setMessage("El usuario fue creado exitosamente.")
+            // Obliga a usar el botón ACEPTAR
+            .setCancelable(false)
+            .setPositiveButton("ACEPTAR") { dialog, _ ->
+
+                dialog.dismiss()
+
+                // El Login quedó debajo en la pila de Activities,
+                // al cerrar el Registro el usuario vuelve a él
+                finish()
+            }
+            .show()
     }
 
     private fun mostrarToast(mensaje: String) {
