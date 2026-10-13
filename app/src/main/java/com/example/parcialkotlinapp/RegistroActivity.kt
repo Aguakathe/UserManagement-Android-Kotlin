@@ -1,196 +1,276 @@
 package com.example.parcialkotlinapp
 
-import android.R.attr.password
+import android.app.DatePickerDialog
 import android.os.Bundle
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Spinner
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.parcialkotlinapp.api.ApiClient
 import com.example.parcialkotlinapp.models.CrearUsuarioRequest
 import com.example.parcialkotlinapp.models.Usuario
+import com.example.parcialkotlinapp.utils.FechaUtils
+import com.google.android.material.appbar.MaterialToolbar
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.Calendar
 
 class RegistroActivity : AppCompatActivity() {
+
+    // COMPONENTES
+    private lateinit var etNombre: EditText
+    private lateinit var etApellido: EditText
+    private lateinit var etCorreo: EditText
+    private lateinit var etPassword: EditText
+    private lateinit var etFechaNacimiento: EditText
+    private lateinit var tvEdadCalculada: TextView
+    private lateinit var etUniversidad: EditText
+    private lateinit var spSemestre: Spinner
+    private lateinit var btnRegistrar: Button
+    private lateinit var tvMensaje: TextView
+
+    // Fecha seleccionada en el DatePicker (null = no seleccionada)
+    private var fechaNacimiento: Calendar? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_registro)
 
-        // COMPONENTES
-        val etNombre = findViewById<EditText>(R.id.etNombre)
-        val etApellido = findViewById<EditText>(R.id.etApellido)
-        val etCorreo = findViewById<EditText>(R.id.etCorreoRegistro)
-        val etPasswordRegistro = findViewById<EditText>(R.id.etPasswordRegistro)
+        etNombre = findViewById(R.id.etNombre)
+        etApellido = findViewById(R.id.etApellido)
+        etCorreo = findViewById(R.id.etCorreoRegistro)
+        etPassword = findViewById(R.id.etPasswordRegistro)
+        etFechaNacimiento = findViewById(R.id.etFechaNacimiento)
+        tvEdadCalculada = findViewById(R.id.tvEdadCalculada)
+        etUniversidad = findViewById(R.id.etUniversidad)
+        spSemestre = findViewById(R.id.spSemestre)
+        btnRegistrar = findViewById(R.id.btnRegistrar)
+        tvMensaje = findViewById(R.id.tvMensajeRegistro)
 
-        val etEdad = findViewById<EditText>(R.id.etEdad)
 
-        val spRol = findViewById<Spinner>(R.id.spRol)
+        // =====================================
+        // FLECHA SUPERIOR: regresar a la pantalla anterior
+        // =====================================
+        val toolbar = findViewById<MaterialToolbar>(R.id.toolbarRegistro)
 
-        val btnRegistrar = findViewById<Button>(R.id.btnRegistrar)
-        val btnVolver = findViewById<Button>(R.id.btnVolver)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
 
-        val tvMensaje =
-            findViewById<TextView>(R.id.tvMensajeRegistro)
+        configurarSemestres()
 
-        // ROLES
-        val roles = arrayOf(
-            "Seleccione un rol",
-            "Administrador",
-            "Usuario"
-        )
+        // =====================================
+        // FECHA DE NACIMIENTO -> DatePicker
+        // =====================================
+        etFechaNacimiento.setOnClickListener {
+            mostrarDatePicker()
+        }
+
+        btnRegistrar.setOnClickListener {
+            registrarUsuario()
+        }
+    }
+
+    // =====================================
+    // SEMESTRES VÁLIDOS: 1 a 10
+    // La posición del Spinner coincide con el semestre
+    // (posición 0 = "Seleccione el semestre")
+    // =====================================
+    private fun configurarSemestres() {
+
+        val semestres =
+            listOf("Seleccione el semestre") +
+                    (1..10).map { "Semestre $it" }
 
         val adaptador = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_item,
-            roles
+            semestres
         )
 
         adaptador.setDropDownViewResource(
             android.R.layout.simple_spinner_dropdown_item
         )
 
-        spRol.adapter = adaptador
+        spSemestre.adapter = adaptador
 
-        // BOTÓN REGISTRAR
-        btnRegistrar.setOnClickListener {
+    }
 
-            val nombre =
-                etNombre.text.toString().trim()
+    // =====================================
+    // DATEPICKER
+    // =====================================
+    private fun mostrarDatePicker() {
 
-            val apellido =
-                etApellido.text.toString().trim()
-
-            val correo =
-                etCorreo.text.toString().trim()
-
-            val password = etPasswordRegistro.text.toString().trim()
-
-            val edadTexto =
-                etEdad.text.toString().trim()
-
-            // VALIDACIONES
-            if (nombre.isBlank()) {
-                etNombre.error = "Ingrese el nombre"
-                return@setOnClickListener
+        // Si no hay fecha, se abre 18 años atrás como sugerencia
+        val base = fechaNacimiento
+            ?: Calendar.getInstance().apply {
+                add(Calendar.YEAR, -18)
             }
 
-            if (apellido.isBlank()) {
-                etApellido.error = "Ingrese el apellido"
-                return@setOnClickListener
-            }
+        val datePicker = DatePickerDialog(
+            this,
+            { _, anio, mes, dia ->
 
-            if (correo.isBlank()) {
-                etCorreo.error = "Ingrese el correo"
-                return@setOnClickListener
-            }
+                val seleccion =
+                    FechaUtils.crearFecha(anio, mes, dia)
 
-            if (!android.util.Patterns.EMAIL_ADDRESS
-                    .matcher(correo)
-                    .matches()) {
+                fechaNacimiento = seleccion
 
-                etCorreo.error = "Correo no válido"
-                return@setOnClickListener
-            }
-            if (password.isBlank()) {
-                etPasswordRegistro.error = "Ingrese la contraseña"
-                return@setOnClickListener
-            }
+                etFechaNacimiento.setText(
+                    FechaUtils.formatoVisual(seleccion)
+                )
 
-            if (edadTexto.isBlank()) {
-                etEdad.error = "Ingrese la edad"
-                return@setOnClickListener
-            }
+                etFechaNacimiento.error = null
 
-            val edad = edadTexto.toIntOrNull()
+                // La edad se calcula, no se ingresa
+                val edad = FechaUtils.calcularEdad(seleccion)
 
-            if (edad == null || edad < 1 || edad > 120) {
-                etEdad.error = "Edad no válida"
-                return@setOnClickListener
-            }
+                tvEdadCalculada.text = "Edad: $edad años"
+            },
+            base.get(Calendar.YEAR),
+            base.get(Calendar.MONTH),
+            base.get(Calendar.DAY_OF_MONTH)
+        )
 
-            if (spRol.selectedItemPosition == 0) {
+        // No se permiten fechas futuras
+        datePicker.datePicker.maxDate =
+            System.currentTimeMillis()
 
-                Toast.makeText(
-                    this,
-                    "Seleccione un rol",
-                    Toast.LENGTH_SHORT
-                ).show()
+        datePicker.show()
+    }
 
-                return@setOnClickListener
-            }
+    // =====================================
+    // REGISTRAR
+    // =====================================
+    private fun registrarUsuario() {
 
-            // Para esta práctica:
-            // Administrador = 1
-            // Usuario = 2
-            val rolId = spRol.selectedItemPosition
+        val nombre = etNombre.text.toString().trim()
+        val apellido = etApellido.text.toString().trim()
+        val correo = etCorreo.text.toString().trim()
+        val password = etPassword.text.toString().trim()
+        val universidad = etUniversidad.text.toString().trim()
+        val semestre = spSemestre.selectedItemPosition
+        val fecha = fechaNacimiento
 
-            // OBJETO QUE ENVIAREMOS AL BACKEND
+        // VALIDACIONES
+        if (nombre.isBlank()) {
+            etNombre.error = "Ingrese el nombre"
+            return
+        }
 
-            val nuevoUsuario = CrearUsuarioRequest(
-                nombre = nombre,
-                apellido = apellido,
-                correo = correo,
-                edad = edad,
-                password = password,
-                rolId = rolId
-            )
+        if (apellido.isBlank()) {
+            etApellido.error = "Ingrese el apellido"
+            return
+        }
 
-            tvMensaje.text = "Registrando usuario..."
+        if (correo.isBlank()) {
+            etCorreo.error = "Ingrese el correo"
+            return
+        }
 
-            // LLAMADA AL BACKEND
-            ApiClient.usuarioApi
-                .crearUsuario(nuevoUsuario)
-                .enqueue(object : Callback<Usuario> {
+        if (!android.util.Patterns.EMAIL_ADDRESS
+                .matcher(correo)
+                .matches()) {
 
-                    override fun onResponse(
-                        call: Call<Usuario>,
-                        response: Response<Usuario>
-                    ) {
+            etCorreo.error = "Correo no válido"
+            return
+        }
 
-                        if (response.isSuccessful) {
+        if (password.isBlank()) {
+            etPassword.error = "Ingrese la contraseña"
+            return
+        }
 
-                            val usuarioCreado = response.body()
+        // La API exige mínimo 6 caracteres
+        if (password.length < 6) {
+            etPassword.error = "La contraseña debe tener mínimo 6 caracteres"
+            return
+        }
 
-                            tvMensaje.text =
-                                "Usuario registrado correctamente"
+        if (fecha == null) {
+            etFechaNacimiento.error = "Seleccione la fecha de nacimiento"
+            mostrarToast("Seleccione la fecha de nacimiento")
+            return
+        }
 
-                            Toast.makeText(
-                                this@RegistroActivity,
-                                "Usuario creado. ID: ${usuarioCreado?.id}",
-                                Toast.LENGTH_LONG
-                            ).show()
+        if (universidad.isBlank()) {
+            etUniversidad.error = "Ingrese la universidad"
+            return
+        }
 
-                            // Limpiar formulario
-                            etNombre.text.clear()
-                            etApellido.text.clear()
-                            etCorreo.text.clear()
-                            etEdad.text.clear()
+        if (semestre !in 1..10) {
+            mostrarToast("Seleccione un semestre entre 1 y 10")
+            return
+        }
 
-                            spRol.setSelection(0)
+        // OBJETO QUE ENVIAREMOS AL BACKEND
+        val nuevoUsuario = CrearUsuarioRequest(
+            nombre = nombre,
+            apellido = apellido,
+            correo = correo,
+            password = password,
+            fechaNacimiento = FechaUtils.formatoApi(fecha),
+            universidad = universidad,
+            semestre = semestre
+        )
 
-                        } else {
+        tvMensaje.text = "Registrando usuario..."
 
-                            tvMensaje.text =
-                                "Error del servidor: ${response.code()}"
-                        }
-                    }
+        // Evitar varios clics mientras responde la API
+        btnRegistrar.isEnabled = false
 
-                    override fun onFailure(
-                        call: Call<Usuario>,
-                        t: Throwable
-                    ) {
+        // LLAMADA AL BACKEND
+        ApiClient.usuarioApi
+            .crearUsuario(nuevoUsuario)
+            .enqueue(object : Callback<Usuario> {
+
+                override fun onResponse(
+                    call: Call<Usuario>,
+                    response: Response<Usuario>
+                ) {
+
+                    btnRegistrar.isEnabled = true
+
+                    if (response.isSuccessful) {
+
+                        val usuarioCreado = response.body()
 
                         tvMensaje.text =
-                            "Error de conexión: ${t.message}"
-                    }
-                })
-        }
+                            "Usuario registrado correctamente"
 
-        // VOLVER AL LOGIN
-        btnVolver.setOnClickListener {
-            finish()
-        }
+                        Toast.makeText(
+                            this@RegistroActivity,
+                            "Usuario creado. ID: ${usuarioCreado?.id}",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                    } else {
+
+                        tvMensaje.text =
+                            "Error del servidor: ${response.code()}"
+                    }
+                }
+
+                override fun onFailure(
+                    call: Call<Usuario>,
+                    t: Throwable
+                ) {
+
+                    btnRegistrar.isEnabled = true
+
+                    tvMensaje.text =
+                        "Error de conexión: ${t.message}"
+                }
+            })
+    }
+
+    private fun mostrarToast(mensaje: String) {
+        Toast.makeText(this, mensaje, Toast.LENGTH_SHORT).show()
     }
 }

@@ -5,6 +5,8 @@ data class CrearUsuarioRequest(
     val apellido: String,
     val correo: String,
     val password: String,
-    val edad: Int,
-    val rolId: Int
+    // Formato "yyyy-MM-dd", el que espera DateOnly en .NET
+    val fechaNacimiento: String,
+    val universidad: String,
+    val semestre: Int
 )
