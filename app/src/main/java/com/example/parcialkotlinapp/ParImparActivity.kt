@@ -5,6 +5,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.appbar.MaterialToolbar
 
 class ParImparActivity : AppCompatActivity() {
 
@@ -17,7 +18,14 @@ class ParImparActivity : AppCompatActivity() {
         val etNumero = findViewById<EditText>(R.id.etNumero)
         val btnValidar = findViewById<Button>(R.id.btnValidar)
         val tvResultado = findViewById<TextView>(R.id.tvResultado)
-        val btnVolver = findViewById<Button>(R.id.btnVolver)
+        val toolbar = findViewById<MaterialToolbar>(R.id.toolbarParImpar)
+
+        // =====================================
+        // FLECHA SUPERIOR: regresar a la pantalla principal
+        // =====================================
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
 
 
         btnValidar.setOnClickListener {
@@ -44,14 +52,6 @@ class ParImparActivity : AppCompatActivity() {
             } else {
                 tvResultado.text = "$numero es IMPAR"
             }
-        }
-
-        // =====================================
-        // VOLVER AL LOGIN
-        // =====================================
-
-        btnVolver.setOnClickListener {
-            finish()
         }
     }
 }
