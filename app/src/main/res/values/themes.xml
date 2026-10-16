@@ -6,4 +6,9 @@
     </style>
 
     <style name="Theme.ParcialKotlinApp" parent="Base.Theme.ParcialKotlinApp" />
+
+    <!-- 4.8 Estilo común para la barra superior de todas las pantallas -->
+    <style name="Widget.App.Toolbar" parent="Widget.Material3.Toolbar.Surface">
+        <item name="android:elevation">4dp</item>
+    </style>
 </resources>

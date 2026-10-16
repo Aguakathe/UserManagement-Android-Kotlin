@@ -13,6 +13,7 @@ import com.example.parcialkotlinapp.api.ApiClient
 import com.example.parcialkotlinapp.api.ApiErrorParser
 import com.example.parcialkotlinapp.models.CrearUsuarioRequest
 import com.example.parcialkotlinapp.models.Usuario
+import com.example.parcialkotlinapp.ui.configurarFlechaRegresar
 import com.example.parcialkotlinapp.utils.FechaUtils
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -61,9 +62,7 @@ class RegistroActivity : AppCompatActivity() {
         // =====================================
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbarRegistro)
 
-        toolbar.setNavigationOnClickListener {
-            finish()
-        }
+        configurarFlechaRegresar(toolbar)
 
         configurarSemestres()
 

@@ -12,8 +12,7 @@
         android:id="@+id/toolbarParImpar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:navigationContentDescription="Regresar"
-        app:navigationIcon="@drawable/ic_arrow_back"
+        style="@style/Widget.App.Toolbar"
         app:title="Par o Impar" />
 
     <LinearLayout

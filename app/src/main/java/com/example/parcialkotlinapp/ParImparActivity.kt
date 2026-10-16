@@ -5,6 +5,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.parcialkotlinapp.ui.configurarFlechaRegresar
 import com.google.android.material.appbar.MaterialToolbar
 
 class ParImparActivity : AppCompatActivity() {
@@ -23,9 +24,7 @@ class ParImparActivity : AppCompatActivity() {
         // =====================================
         // FLECHA SUPERIOR: regresar a la pantalla principal
         // =====================================
-        toolbar.setNavigationOnClickListener {
-            finish()
-        }
+        configurarFlechaRegresar(toolbar)
 
 
         btnValidar.setOnClickListener {
